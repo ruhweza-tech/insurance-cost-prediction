@@ -10,4 +10,5 @@ notes.txt
 data/raw/
 
 # ignore cache 
-_pycache_/
+__pycache__/
+*.pyc
