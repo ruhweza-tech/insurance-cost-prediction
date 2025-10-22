@@ -1,0 +1,13 @@
+
+# Ignore trained models and metrics 
+model/*.pkl
+model/*.json
+
+# Ignore notes
+notes.txt
+
+# Ignore python caches 
+_pycache_/
+
+# Ignore raw dataset
+data/raw/
