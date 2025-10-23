@@ -1,0 +1,4 @@
+{
+    "raw_path":"data/raw/insurance.csv",
+    "clean_data_folder":"data/clean"
+}
