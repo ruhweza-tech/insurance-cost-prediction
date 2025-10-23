@@ -2,10 +2,9 @@
 # Insurance Cost Prediction
 #=============================================================================================================
 
-
-# import necessary libraries 
-import joblib
+# Import Required Librarries
 import os 
+import joblib 
 import json
 import pandas as pd 
 import numpy as np
@@ -14,87 +13,107 @@ from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.metrics import r2_score
 
 
-# Define the path for the cleaned dataset 
+# Path to the Cleaned Dataset (CSV)
 clean_path = r"C:\Users\ruhwemug\ML_Projects\my_project\insurance_cost_prediction\data\clean\insurance_cleaned.csv"
 
-# Creae a function to build and train the model 
 
 def train_model(clean_path):
 
-    # Load the cleaned dataset
+    #=================================================================
+    # Function to train the dataset
+    # Description:
+    #       - Load cleaned dataset
+    #       - Split the dataset into train and test sets 
+    #       - Build and train the model using xgboost regression
+    #       - Evaluation (R², Adjusted R², K-Fold Cross Validation)
+    #       - Return trained model and performance metrics
+    #=================================================================
+
+
+    # Load the clean datatset
     dataset = pd.read_csv(clean_path)
 
-    # Extract the independent and dependent features 
+    # Extract independent and dependent features from the dataset
     x = dataset.iloc[:,:-1].values 
     y = dataset.iloc[:,-1].values 
 
-    # Split the dataset into train and test set 
+    # Split the dataset into train and test sets 
     x_train, x_test, y_train, y_test = train_test_split(x, y, test_size = 0.2, random_state = 0)
 
-    # Build and train the model 
+    # Build and train the model
     model = xgb.XGBRegressor(max_depth = 2, learning_rate = 0.1, n_estimators = 100, random_state = 0)
     model.fit(x_train, y_train)
 
-    # Make predictions on the dataset
+    # Make predictions on the dataset 
     y_pred = model.predict(x_test)
+
+    # Display the predictions and the true values side by side for comparision
+    print(" ")
     np.set_printoptions(precision = 2)
     print(np.concatenate((y_pred.reshape(len(y_pred),1), y_test.reshape(len(y_test),1)),1))
 
-    # R-Squared 
+    # Compute R-Squared 
     r2 = r2_score(y_test, y_pred)
 
-    # Adjusted R-squared 
+    # Compute Adjusted R-Squared
     k = x_test.shape[1]
     n = x_test.shape[0]
 
-    adj_r2 = 1 - (1 - r2)*(n - 1)/(n - k - 1)
+    adj_r2 = 1 - (1 - r2) * (n - 1)/(n - k - 1)
 
-    # K-fold cross validation 
-    r2s = cross_val_score(
-                        estimator = model ,
-                        X = x,
-                        y = y,
-                        scoring = "r2",
-                        cv = 10
-                        )
-    print("")
-    print("K-Fold Cross Validation Average R-Squared: {:.3f}".format(r2s.mean()))
-    print("Standard Deviation: {:.3f}".format(r2s.std()))
+    # Perform 10-fold cross validation for model stability
+    avg_r2 = cross_val_score(
+                            estimator = model,
+                            X = x, 
+                            y = y,
+                            scoring = "r2",
+                            cv = 10
+                            )
+    print(" ")
+    print("Average R-Squared (10-fold): {:.3f}".format(avg_r2.mean()))
+    print("Standard Deviation: {:.3f}".format(avg_r2.std()))
 
-    return model, r2, adj_r2, r2s
+    # Return trained model and performance metrics
+    return model, r2, adj_r2, avg_r2
 
+
+#===================================================================================
+# Main execution block
+    # Purpose:
+    #   Ensures that this script runs directly here when executed not when imported
+#===================================================================================
 
 if __name__ == "__main__":
 
-    # Define the folder path where you want to store the model
-    folder = r"C:\Users\ruhwemug\ML_Projects\my_project\insurance_cost_prediction\model"
+    # Define the folder path to store the trained model
+    model_path = r"C:\Users\ruhwemug\ML_Projects\my_project\insurance_cost_prediction\model"
 
-    # Check if the folder exists or create one if missing 
-    os.makedirs(folder, exist_ok = True)
+    # Check if the path exits, if missing create one 
+    os.makedirs(model_path, exist_ok = True)
 
-    # Create a full path in the folder to store the model
-    model_path = os.path.join(folder, "model.pkl")
+    # Create a full path in the model_path to store the trained model 
+    save_model = os.path.join(model_path, "model.pkl")
 
-    # Call the fucntion to train the model 
-    model,r2, adj_r2, r2s = train_model(clean_path)
+    # Call the function to train the model and calculate model metrics 
+    model, r2, adj_r2, avg_r2 = train_model(clean_path)
 
-    # Save the trained model to the path 
-    joblib.dump(model, model_path)
+    # Save the trained model to the full path created 
+    joblib.dump(model, save_model)
 
-
-    # save model metrics to json file 
+    # Collect model performace metrics
     metrics = {
-                "R-Squared": r2,
+                "R-Sqaured":r2,
                 "Adjusted R-Squared": adj_r2,
-                "K-Fold Cross Validation R-Squared":r2s.mean(),
-                "Standard Deviation": r2s.std()
-            }
+                "Average R-Squared (10-fold cv)": avg_r2.mean(),
+                "Standard Deviation": avg_r2.std()
+                }
     
-    # create a full path to store the json file containing the model metrics
-    metrics_path = os.path.join(folder, "model_metrics.json")
+    # Create a full path to store the model metrics 
+    metrics_path = os.path.join(model_path, "metrics.json")
 
-    # write metrics to json
+    # Write the model metrics to json files and store to the path
     with open(metrics_path, "w") as f:
         json.dump(metrics, f, indent = 4)
 
-    print(f"Model metrics successfully saved at: {metrics_path}")
+    print(" ")
+    print(f"The trained model and model metrics are all sucessfully stored at: {save_model}")
