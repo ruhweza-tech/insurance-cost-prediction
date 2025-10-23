@@ -3,10 +3,20 @@
 import pandas as pd 
 import numpy as np 
 import os 
-import joblib
+import json
+from pathlib import Path
 
-# Define the path for the raw dataset 
-raw_path = r"C:\Users\ruhwemug\ML_Projects\my_project\insurance_cost_prediction\data\raw\insurance.csv"
+BASE_DIR = Path(__file__).resolve().parent.parent
+config_path = BASE_DIR/"config"/"insurance_config.json"
+
+with open(config_path) as f:
+    config = json.load(f)
+
+
+raw_path = BASE_DIR/ config["raw_path"]
+clean_folder = BASE_DIR/ config["clean_data_folder"]
+clean_folder.mkdir(parents = True, exist_ok = True)
+save_path = clean_folder/ "insurance_clean.csv"
 
 
 def clean_data(raw_path):
@@ -40,15 +50,6 @@ def clean_data(raw_path):
     #   Ensures that this script runs directly here when executed not when imported
 #===================================================================================
 if __name__ == "__main__":
-
-    # Define the folder path to store the cleaned dataset 
-    folder = r"C:\Users\ruhwemug\ML_Projects\my_project\insurance_cost_prediction\data\clean"
-
-    # Check if the folder path exists , if missing create one
-    os.makedirs(folder, exist_ok = True)
-
-    # Create a full path in the folder to store the cleaned dataset 
-    save_path = os.path.join(folder, "insurance_cleaned.csv")
 
     # Call the fucntion to clean the raw dataset
     dataset = clean_data(raw_path)
