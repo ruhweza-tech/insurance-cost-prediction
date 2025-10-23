@@ -8,8 +8,16 @@ import joblib
 # Define the path for the raw dataset 
 raw_path = r"C:\Users\ruhwemug\ML_Projects\my_project\insurance_cost_prediction\data\raw\insurance.csv"
 
-# Create a function to clean the raw dataset 
+
 def clean_data(raw_path):
+
+#===================================================================================
+# Function to clean the dataset
+    # Description:
+    #   - Load the dataset
+    #   - Encode the binary columns 
+    #   - One-hot encode the region columns 
+#===================================================================================
 
     # Load the dataset
     dataset = pd.read_csv(raw_path)
@@ -26,7 +34,11 @@ def clean_data(raw_path):
     return dataset
 
 
-# Create a single entry point to run the code 
+#===================================================================================
+# Main execution block
+    # Purpose:
+    #   Ensures that this script runs directly here when executed not when imported
+#===================================================================================
 if __name__ == "__main__":
 
     # Define the folder path to store the cleaned dataset 
