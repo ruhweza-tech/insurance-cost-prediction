@@ -1,62 +1,64 @@
 
 # Import necessary libraries 
+import os 
+import json 
 import pandas as pd 
 import numpy as np 
-import os 
-import json
-from pathlib import Path
+from dotenv import load_dotenv
+from pathlib import Path 
 
-BASE_DIR = Path(__file__).resolve().parent.parent
-config_path = BASE_DIR/"config"/"insurance_config.json"
+# Load the .env variables and define the base directory 
+load_dotenv()
+BASE_DIR = Path(__file__).resolve().parents[1]
 
-with open(config_path) as f:
-    config = json.load(f)
+# Define the config path and load json variables 
+CONFIG_PATH = BASE_DIR/"config"/"insurance_config.json"
+with open(CONFIG_PATH) as m:
+    config = json.load(m)
 
+# Resolve the json files
+RAW_PATH = BASE_DIR/config["raw_path"]
+CLEAN_FOLDER = BASE_DIR/config["clean_data_folder"]
 
-raw_path = BASE_DIR/ config["raw_path"]
-clean_folder = BASE_DIR/ config["clean_data_folder"]
-clean_folder.mkdir(parents = True, exist_ok = True)
-save_path = clean_folder/ "insurance_clean.csv"
+# Check if the CLEAN_FOLDER path exists, if missing create one 
+CLEAN_FOLDER.mkdir(parents = True, exist_ok = True)
 
-
-def clean_data(raw_path):
-
-#===================================================================================
-# Function to clean the dataset
-    # Description:
-    #   - Load the dataset
-    #   - Encode the binary columns 
-    #   - One-hot encode the region columns 
-#===================================================================================
-
-    # Load the dataset
-    dataset = pd.read_csv(raw_path)
-
-    # Encode the binary columns 
-    dataset["sex"] = dataset["sex"].apply(lambda m: 0 if m == "female" else 1)
-    dataset["smoker"] = dataset["smoker"].apply(lambda m: 0 if m == "no" else 1)
-
-    # One-hot encode the region columns 
-    region_dummies = pd.get_dummies(dataset["region"], drop_first = True , dtype = int)
-    dataset = pd.concat([region_dummies, dataset], axis = 1)
-    dataset.drop(["region"], axis = 1, inplace = True)
-
-    return dataset
+# Create a full path in the CLEAN_FOLDER to store the clean datatset
+SAVE_PATH = CLEAN_FOLDER/"insurance_clean.csv"
 
 
-#===================================================================================
-# Main execution block
-    # Purpose:
-    #   Ensures that this script runs directly here when executed not when imported
-#===================================================================================
+def clean_data(raw_path: Path):
+    #==========================================================================
+    # FUNCTION: To clean raw dataset
+    #   - Load raw dataset
+    #   - Encode binary columns 
+    #   - One-hot encode 
+    #   - Return clean dataset
+
+    # Load raw dataset
+    clean_dataset = pd.read_csv(raw_path)
+
+    # Encode binary columns 
+    clean_dataset["sex"] = clean_dataset["sex"].apply(lambda m: 0 if m == "female" else 1)
+    clean_dataset["smoker"] = clean_dataset["smoker"].apply(lambda m: 0 if m == "no" else 1)
+
+    # one-hot encode region columns 
+    region_dummies = pd.get_dummies(clean_dataset["region"], drop_first = True, dtype = int)
+    clean_dataset = pd.concat([region_dummies, clean_dataset], axis = 1)
+    clean_dataset.drop(["region"], axis = 1, inplace = True)
+
+    return clean_dataset
+
+
+# Create a single entry point to run the script directly here so that it is  not run when imported
 if __name__ == "__main__":
 
-    # Call the fucntion to clean the raw dataset
-    dataset = clean_data(raw_path)
+    # Call the fucntion to clean the raw dataset and save the cleaned dataset to the SAVE_PATH 
+    clean_dataset = clean_data(RAW_PATH)
+    clean_dataset.to_csv(SAVE_PATH, index = False)
 
-    # Save the cleaned dataset to the full path created 
-    dataset.to_csv(save_path, index = False)
-
-    print(dataset.sample(5))
-    print(f"\nThe cleaned dataset is saved at: {save_path}")
+    print(clean_dataset.head())
+    print(f"\nThe cleaned dataset is saved at: {SAVE_PATH}\n")
+    print(f"Enviroment:{os.getenv('ENVIROMENT','local')}")
+    print(f"AUTHOR: {os.getenv('AUTHOR', 'Mugisha')}")
 
