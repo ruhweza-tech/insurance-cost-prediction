@@ -7,16 +7,16 @@ import numpy as np
 from dotenv import load_dotenv
 from pathlib import Path 
 
-# Load the .env variables and define the base directory 
+# Load the .env variables and define the base directory two levels up
 load_dotenv()
 BASE_DIR = Path(__file__).resolve().parents[1]
 
-# Define the config path and load json variables 
+# Define the config path and load config variables from json
 CONFIG_PATH = BASE_DIR/"config"/"insurance_config.json"
 with open(CONFIG_PATH) as m:
     config = json.load(m)
 
-# Resolve the json files
+# Define the raw dataset path and the folder to store clean dataset
 RAW_PATH = BASE_DIR/config["raw_path"]
 CLEAN_FOLDER = BASE_DIR/config["clean_data_folder"]
 
@@ -59,6 +59,6 @@ if __name__ == "__main__":
 
     print(clean_dataset.head())
     print(f"\nThe cleaned dataset is saved at: {SAVE_PATH}\n")
-    print(f"Enviroment:{os.getenv('ENVIROMENT','local')}")
+    print(f"Environment:{os.getenv('ENVIRONMENT','local')}")
     print(f"AUTHOR: {os.getenv('AUTHOR', 'Mugisha')}")
 
