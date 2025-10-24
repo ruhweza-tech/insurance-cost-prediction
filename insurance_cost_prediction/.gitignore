@@ -12,3 +12,6 @@ data/raw/
 # ignore cache 
 __pycache__/
 *.pyc
+
+# enviroment
+.env
