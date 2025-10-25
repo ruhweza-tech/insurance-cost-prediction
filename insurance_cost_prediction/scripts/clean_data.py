@@ -51,6 +51,10 @@ def clean_data(raw_path: Path):
     return clean_dataset
 
 
+""" 
+Create a single entry point for printing out the results only when run in this scrip. Should not run when script is imported
+"""
+
 if __name__ == "__main__":
 
     # Call the function to clean and save the dataset to the path created
