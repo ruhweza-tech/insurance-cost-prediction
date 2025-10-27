@@ -22,7 +22,7 @@ RAW_PATH = BASE_DIR/config["raw_path"]
 CLEAN_FOLDER = BASE_DIR/config["clean_data_folder"]
 
 # Check if the CLEAN_FOLDER exists, if missing create one
-CLEAN_FOLDER.   mkdir(parents = True , exist_ok = True)
+CLEAN_FOLDER.mkdir(parents = True , exist_ok = True)
 
 # Create a full path in the CLEAN_FOLDER to store the cleaned dataset
 SAVE_PATH = CLEAN_FOLDER/"insurance_clean.csv"
