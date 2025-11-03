@@ -1,4 +1,6 @@
+
 {
     "raw_path":"data/raw/insurance.csv",
-    "clean_data_folder":"data/clean"
+    "clean_data_folder":"data/clean",
+    "model_path":"insurance_cost_prediction/model"
 }
