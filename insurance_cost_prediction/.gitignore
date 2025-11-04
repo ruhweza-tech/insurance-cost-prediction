@@ -13,5 +13,8 @@ data/raw/
 __pycache__/
 *.pyc
 
-# enviroment
+# ignore enviroment variables
 .env
+
+# notes 
+notes/
