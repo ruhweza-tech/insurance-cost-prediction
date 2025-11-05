@@ -2,118 +2,239 @@
 # Insurance Cost Prediction
 #=============================================================================================================
 
-# Import Required Librarries
-import os 
-import joblib 
-import json
+# Import the necessary libraries 
 import pandas as pd 
-import numpy as np
-import xgboost as xgb
+import numpy as np 
+import joblib
+import json 
+from pathlib import Path 
 from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.metrics import r2_score
+import xgboost as xgb
+from dotenv import load_dotenv
 
 
-# Path to the Cleaned Dataset (CSV)
-clean_path = r"C:\Users\ruhwemug\ML_Projects\my_project\insurance_cost_prediction\data\clean\insurance_cleaned.csv"
+# Load the .env variables and define the base working directory 
+load_dotenv()
+BASE_DIR = Path(__file__).resolve().parents[1]
 
+# Define the path for config and load the configuration variables from the json files
+CONFIG_PATH = BASE_DIR/"config"/"insurance_config.json"
+with open(CONFIG_PATH) as m:
+    config = json.load(m)
 
-def train_model(clean_path):
+# Define the path for the clean dataset and the folder to store the trained model
+CLEAN_PATH = BASE_DIR/config["clean_data_folder"]
+MODEL_PATH = BASE_DIR/config["model_path"]
 
-    #=================================================================
-    # Function to train the dataset
-    # Description:
-    #       - Load cleaned dataset
-    #       - Split the dataset into train and test sets 
-    #       - Build and train the model using xgboost regression
-    #       - Evaluation (R², Adjusted R², K-Fold Cross Validation)
-    #       - Return trained model and performance metrics
-    #=================================================================
+# Check if the path to store the model exists, if missing , create one
+MODEL_PATH.mkdir(parents = True, exist_ok = True )
 
+# Create a full path in the model folder to store the trained model 
+SAVE_MODEL = MODEL_PATH/"model.pkl"
 
-    # Load the clean datatset
-    dataset = pd.read_csv(clean_path)
+def train_model(CLEAN_PATH: Path):
+    """ 
+    Function to train the model:
+        - Load the cleaned dataset
+        - Extract independet and dependent variables 
+        - Split the dataset into train and test set
+        - Build and train the model
+        - Inference
+        - Evaluation
+    """
+    # Load the cleaned dataset
+    clean_data = pd.read_csv(CLEAN_PATH)
 
-    # Extract independent and dependent features from the dataset
-    x = dataset.iloc[:,:-1].values 
-    y = dataset.iloc[:,-1].values 
+    # Extract the independent(y) and dependent variables(x)
+    x = clean_data.iloc[:,:-1].values
+    y = clean_data.iloc[:,-1].values
 
-    # Split the dataset into train and test sets 
+    # Split the cleaned dataset into train and test sets 
     x_train, x_test, y_train, y_test = train_test_split(x, y, test_size = 0.2, random_state = 0)
 
-    # Build and train the model
-    model = xgb.XGBRegressor(max_depth = 2, learning_rate = 0.1, n_estimators = 100, random_state = 0)
+    # Build and train the model 
+    model = xgb.XGBRegressor(**config["xgb_params"])
     model.fit(x_train, y_train)
 
-    # Make predictions on the dataset 
+    # Inference 
     y_pred = model.predict(x_test)
 
-    # Display the predictions and the true values side by side for comparision
-    print(" ")
+    # Display the predictions and the true values side by side for comparison 
     np.set_printoptions(precision = 2)
     print(np.concatenate((y_pred.reshape(len(y_pred),1), y_test.reshape(len(y_test),1)),1))
 
-    # Compute R-Squared 
+    # Evaluation 
+    ## R-Squared
     r2 = r2_score(y_test, y_pred)
 
-    # Compute Adjusted R-Squared
+    ## Adjusted R-Squared 
     k = x_test.shape[1]
     n = x_test.shape[0]
 
     adj_r2 = 1 - (1 - r2) * (n - 1)/(n - k - 1)
-
-    # Perform 10-fold cross validation for model stability
-    avg_r2 = cross_val_score(
-                            estimator = model,
-                            X = x, 
-                            y = y,
-                            scoring = "r2",
-                            cv = 10
-                            )
+    
+    # k-fold cross validation
+    avg_r2 = cross_val_score(estimator = model,
+                          X = x, 
+                          y = y, 
+                          scoring = "r2",
+                          cv = 10
+                         )
     print(" ")
-    print("Average R-Squared (10-fold): {:.3f}".format(avg_r2.mean()))
-    print("Standard Deviation: {:.3f}".format(avg_r2.std()))
+    print(f" Average R-Squared(10-fold):{avg_r2.mean():.3f}")
+    print(f"Standard Deviation:{avg_r2.std():.3f}")
 
-    # Return trained model and performance metrics
+    # Return the trained model with its perfomance metrices 
     return model, r2, adj_r2, avg_r2
 
 
-#===================================================================================
-# Main execution block
-    # Purpose:
-    #   Ensures that this script runs directly here when executed not when imported
-#===================================================================================
+if __file__ == "__main__":
+    """
+    Single entry point as the only place to print the output 
+        - Call the function to build and train the model
+        - Save the trained mdoel to the full path created
+        - Save the perfomance metrics to a json file 
+    """
 
-if __name__ == "__main__":
+    # Call the fucntion to build and train the model 
+    model,r2, adj_r2, avg_r2 = train_model(CLEAN_PATH)
 
-    # Define the folder path to store the trained model
-    model_path = r"C:\Users\ruhwemug\ML_Projects\my_project\insurance_cost_prediction\model"
-
-    # Check if the path exits, if missing create one 
-    os.makedirs(model_path, exist_ok = True)
-
-    # Create a full path in the model_path to store the trained model 
-    save_model = os.path.join(model_path, "model.pkl")
-
-    # Call the function to train the model and calculate model metrics 
-    model, r2, adj_r2, avg_r2 = train_model(clean_path)
-
-    # Save the trained model to the full path created 
-    joblib.dump(model, save_model)
-
-    # Collect model performace metrics
-    metrics = {
-                "R-Sqaured":r2,
-                "Adjusted R-Squared": adj_r2,
-                "Average R-Squared (10-fold cv)": avg_r2.mean(),
-                "Standard Deviation": avg_r2.std()
-                }
+    # Save the model to the model folder 
+    joblib.dump(model, SAVE_MODEL)
     
-    # Create a full path to store the model metrics 
-    metrics_path = os.path.join(model_path, "metrics.json")
+   
+    # Save model performance metrics as json
+    metrics = {
+            "R-Squared": r2,
+            "Adjusted R-Squared": adj_r2,
+            "Average R-Squared (10-fold)": avg_r2.mean(),
+            "Standard Deviation": avg_r2.std()
+             }
+    # Create a full path in the model folder to store the model metrics 
+    metrics_path = MODEL_PATH/"model_metrics.json"
 
-    # Write the model metrics to json files and store to the path
+    # Write the model performance metrics to json files 
     with open(metrics_path, "w") as f:
         json.dump(metrics, f, indent = 4)
+   
+    
+    # Summary 
+    print("\n=======================================================================================")
+    print(f"The trained model is saved at: {SAVE_MODEL}")
+    print(f" Model performance metrics saved at: {metrics_path}")
+    print("=======================================================================================\n")
 
-    print(" ")
-    print(f"The trained model and model metrics are all sucessfully stored at: {save_model}")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
