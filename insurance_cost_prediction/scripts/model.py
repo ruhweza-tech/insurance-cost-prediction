@@ -37,7 +37,7 @@ def train_model(CLEAN_PATH: Path):
     """ 
     Function to train the model:
         - Load the cleaned dataset
-        - Extract independet and dependent variables 
+        - Extract independent and dependent variables 
         - Split the dataset into train and test set
         - Build and train the model
         - Inference
@@ -85,7 +85,7 @@ def train_model(CLEAN_PATH: Path):
     print(f" Average R-Squared(10-fold):{avg_r2.mean():.3f}")
     print(f"Standard Deviation:{avg_r2.std():.3f}")
 
-    # Return the trained model with its perfomance metrices 
+    # Return the trained model with its performance metrices 
     return model, r2, adj_r2, avg_r2
 
 
