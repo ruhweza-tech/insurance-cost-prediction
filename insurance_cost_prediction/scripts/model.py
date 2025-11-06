@@ -15,12 +15,12 @@ from dotenv import load_dotenv
 load_dotenv()
 BASE_DIR = Path(__file__).resolve().parents[1]
 
-# Define the path to config and load the configuration varibales from the json file 
+# Define the path to config and load the configuration variables from the json file 
 CONFIG_PATH = BASE_DIR/"config"/"insurance_config.json"
 with open(CONFIG_PATH) as m:
     config = json.load(m)
 
-# Define the path where the clean dataset is stored and the folde to store the trained model
+# Define the path where the clean dataset is stored and the folder to store the trained model
 CLEAN_PATH = BASE_DIR/config["clean_dataset_path"]
 MODEL_PATH = BASE_DIR/config["model_path"]
 
@@ -58,16 +58,23 @@ def train_model(CLEAN_PATH: Path):
 
     # Make predictions and compare the predictions side to side with the true values 
     y_pred = model.predict(x_test)
-    np.set_printoptions(precision = 2)
-    print(np.concatenate((y_pred.reshape(len(y_pred),1), y_test.reshape(len(y_test),1)),1))
+
+    # Create a dataframe to compare the predicted values to the true values
+    comparison_df = pd.DataFrame({
+                                "Predicted values":np.round(y_pred, 2),
+                                "True values": np.round(y_test,2),
+                                "Error":np.round(y_test - y_pred, 2)
+                                })
+    print(f"\nPredicted values vs True values vs Error \n")
+    print(comparison_df.sample(10))
 
     # Evaluation 
-    ## R-Sqaured
+    ## R-Squared
     r2 = r2_score(y_test, y_pred)
 
     ## Adjusted R-Squared
     k = x_test.shape[1] # number of columns 
-    n = x_test.shape[0] # number of raws
+    n = x_test.shape[0] # number of rows
     adj_r2 = 1 - (1 - r2) * (n - k)/(n - k - 1)
 
     ## K-Fold cross validation
@@ -79,8 +86,8 @@ def train_model(CLEAN_PATH: Path):
                             cv = 10
                             )
     print("  ")
-    print(f"The average R-Sqaured (10-fold):{avg_r2.mean():.3f}")
-    print(f"The standard devaition: {avg_r2.std():.3f}")
+    print(f"The average R-Squared (10-fold):{avg_r2.mean():.3f}")
+    print(f"The standard deviation: {avg_r2.std():.3f}")
     
     # Return the trained model and the model performance metrics 
     return model, r2, adj_r2, avg_r2
@@ -93,7 +100,7 @@ if __name__ == "__main__":
         - Save model performance metrics as json
         - Create a new path in the model folder to store the performance metrics 
         - Write the model performance metrics to json file
-        - Disply the output 
+        - Display the output 
     """
 
     # Load the function to train the model 
@@ -104,10 +111,10 @@ if __name__ == "__main__":
 
     # Save model performance metrics as json
     metrics = {
-                "R-Sqaured": r2,
+                "R-Squared": r2,
                 "Adjusted R-Squared": adj_r2,
                 "Average R-Squared (10-fold)": avg_r2.mean(),
-                "Standard Devaition": avg_r2.std()
+                "Standard Deviation": avg_r2.std()
                 }
     
     # Create a full path in the model folder to store the performance metrics 
