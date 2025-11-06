@@ -60,6 +60,8 @@ if __name__ == "__main__":
     # Save the cleaned dataset to the clean folder path
     clean_dataset.to_csv(SAVE_PATH, index = False)
 
+    # Display the output
+
     print("\n====================================================================================")
     print(clean_dataset.head())
     print(" ")
