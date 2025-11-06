@@ -2,11 +2,17 @@
 {
     "raw_path":"data/raw/insurance.csv",
     "clean_data_folder":"data/clean",
-    "model_path":"insurance_cost_prediction/model",
+    "clean_dataset_path":"data/clean/insurance_cleaned.csv",
+    "model_path":"model",
     "xgb_params":{
                 "max_depth":2,
                 "learning_rate": 0.1,
                 "n_estimators": 100,
                 "random_state": 0
+                },         
+    "split_params": {
+                    "test_size": 0.2,
+                    "random_state": 0
     }
-}
+}                   
+    
