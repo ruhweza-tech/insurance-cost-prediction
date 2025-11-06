@@ -78,7 +78,7 @@ def train_model(CLEAN_PATH: Path):
                             scoring = "r2",
                             cv = 10
                             )
-
+    print("  ")
     print(f"The average R-Sqaured (10-fold):{avg_r2.mean():.3f}")
     print(f"The standard devaition: {avg_r2.std():.3f}")
     
