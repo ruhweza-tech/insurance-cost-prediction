@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 from fastapi import FastAPI
 from pydantic import BaseModel, conint, confloat
 from pathlib import Path
+from typing import Annotated
 
 
 # Load the .env variables and define the base working directory (two levels up from this file)
@@ -45,14 +46,14 @@ def create_app(model_path: Path)-> FastAPI:
         
         # Creating the user input data structure 
         class PredictionInput(BaseModel):
-                                age: conint(ge = 0, le = 100)
-                                sex:conint(ge = 0, le = 1)
-                                bmi:confloat(gt = 0)
-                                children:conint(ge =0, le = 10)
-                                smoker:conint(ge = 0, le = 1)
-                                northwest:conint(ge = 0, le = 1)
-                                southeast:conint(ge = 0, le = 1)
-                                southwest:conint(ge = 0, le = 1)
+                                age:Annotated[int, conint(ge=0, le=100)]
+                                sex:Annotated[int, conint(ge = 0, le = 1)]
+                                bmi:Annotated[float, confloat(gt = 0)]
+                                children:Annotated[int,conint(ge =0, le = 10)]
+                                smoker:Annotated[int,conint(ge = 0, le = 1)]
+                                northwest:Annotated[int, conint(ge = 0, le = 1)]
+                                southeast:Annotated[int, conint(ge = 0, le = 1)]
+                                southwest:Annotated[int, conint(ge = 0, le = 1)]
 
         # Create an endpoint for users to be able to interact with the api
         @app.post(
