@@ -3,7 +3,7 @@
     "raw_path":"data/raw/insurance.csv",
     "clean_data_folder":"data/clean",
     "clean_dataset_path":"data/clean/insurance_cleaned.csv",
-    "model_path":"model",
+    "model_path":"model/model.pkl",
     "xgb_params":{
                 "max_depth":2,
                 "learning_rate": 0.1,
@@ -14,5 +14,6 @@
                     "test_size": 0.2,
                     "random_state": 0
     }
-}                   
+}  
+                
     
