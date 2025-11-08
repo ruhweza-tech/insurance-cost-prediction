@@ -9,7 +9,7 @@ from fastapi import FastAPI, Body
 from pydantic import BaseModel, conint, confloat
 
 
-# Load the .env variables and define the base working directory[2 levels up]
+# Define the base working directory[2 levels up]
 BASE_DIR = Path(__file__).resolve().parents[1]
 
 # Define the path to the config and load the configuration variables from json 
