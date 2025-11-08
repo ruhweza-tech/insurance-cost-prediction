@@ -1,5 +1,5 @@
 
-# Import regquired libraries 
+# Import required libraries 
 import joblib 
 import uvicorn 
 import json
