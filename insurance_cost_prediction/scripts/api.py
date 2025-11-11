@@ -2,6 +2,7 @@
 # Import required libraries 
 import joblib 
 import json 
+import os
 import uvicorn
 import numpy as np 
 from pathlib import Path 
@@ -18,7 +19,7 @@ with open(CONFIG_PATH) as f:
     config = json.load(f)
 
 # Define the path to the trained model 
-MODEL_PATH = BASE_DIR/config["model_path"]
+MODEL_PATH = BASE_DIR/config["trained_model_path"]
 
 # Create the user input data structure with validation constraints
 class PredictionInput(BaseModel):
@@ -44,7 +45,7 @@ def create_app(model_path:Path)-> FastAPI:
                 - Return the app
         """
         # Load the trained model 
-        #model = joblib.load(model_path)
+        model = joblib.load(model_path)
 
         # Creating a fastapi app that handles all API routes 
         app = FastAPI(
@@ -67,8 +68,6 @@ def create_app(model_path:Path)-> FastAPI:
                         - Prepare user input data for prediction 
                         - Make predictions 
                 """
-                 # Load the trained model each time
-                model = joblib.load(model_path)
 
                 # Prepare user input data from the user data structure 
                 user_input_data = np.array([[
@@ -103,7 +102,10 @@ if __name__ == "__main__":
         # Call the fucntion to create the fastapi app
         app = create_app(MODEL_PATH)
 
+        # Use default port
+        port = int(os.environ.get("PORT", 8000))
+
         # Run the fastapi locally 
-        uvicorn.run(app, host = "127.0.0.1", port = 8000)
+        uvicorn.run(app, host = "0.0.0.0", port = port)
 
         
