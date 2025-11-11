@@ -1,132 +1,132 @@
 
-# Import the required libraries 
-import pandas as pd 
-import json 
+# Import the required libraries
 import numpy as np 
+import pandas as pd 
+import json
 import joblib
-import xgboost as xgb 
+from dotenv import load_dotenv
+from pathlib import Path 
+import xgboost as xgb
 from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.metrics import r2_score
-from pathlib import Path 
-from dotenv import load_dotenv
 
-# Load the .env variables and define the base working directory 
+
+# Load .env variables and define the base working directory[2 levels up]
 load_dotenv()
 BASE_DIR = Path(__file__).resolve().parents[1]
 
-# Define the path to config and load the configuration variables from the json file 
+# Define the path to config and load it's variables from json
 CONFIG_PATH = BASE_DIR/"config"/"insurance_config.json"
-with open(CONFIG_PATH) as m:
-    config = json.load(m)
+with open(CONFIG_PATH) as f:
+    config = json.load(f)
 
-# Define the path where the clean dataset is stored and the folder to store the trained model
-CLEAN_PATH = BASE_DIR/config["clean_dataset_path"]
-MODEL_PATH = BASE_DIR/config["model_path"]
+# Define the path to the clean dataset and the folder to store the trained model
+CLEAN_DATASET = BASE_DIR/config["clean_dataset_path"]
+MODEL_FOLDER = BASE_DIR/config["model_path"]
 
-# Check if the folder to store the trained model exists , if missing , automatically create one
-MODEL_PATH.mkdir(parents = True, exist_ok = True)
+# Checking if the model folder exists, if missing , create one automatically 
+MODEL_FOLDER.mkdir(parents = True, exist_ok = True)
 
 # Create a full path in the model folder to store the trained model
-SAVE_MODEL = MODEL_PATH/"model.pkl"
+TRAINED_MODEL = MODEL_FOLDER/"model.pkl"
 
-def train_model(CLEAN_PATH: Path):
-    """ 
-    Function to train the model using xgboost
-        - Load the cleaned dataset
+def train_model(clean_dataset: Path):
+    """
+    Function to train the model
+        - Load the clean dataset
         - Extract the independent and dependent variables 
-        - Split the dataset into train and test sets
+        - Split the dataset into train and test sets 
         - Build and train the model
         - Inference
         - Evaluation
     """
 
-    # Load the cleaned dataset
-    clean_dataset = pd.read_csv(CLEAN_PATH)
+    # Load the clean dataset
+    clean_data = pd.read_csv(clean_dataset)
 
     # Extract the independent and dependent variables 
-    x = clean_dataset.iloc[:,:-1].values
-    y = clean_dataset.iloc[:,-1].values
+    x = clean_data.iloc[:,:-1].values
+    y = clean_data.iloc[:,-1].values
 
-    # Split the cleaned dataset into train and test sets 
-    split_params = config["split_params"]
-    x_train, x_test, y_train, y_test = train_test_split(x, y, **split_params)
+    # Split the clean data into train and test sets
+    x_train, x_test, y_train, y_test = train_test_split(x, y, **config["split_params"])
 
     # Build and train the model 
     model = xgb.XGBRegressor(**config["xgb_params"])
     model.fit(x_train, y_train)
 
-    # Make predictions and compare the predictions side to side with the true values 
+    # Make predictions on the cleaned dataset
     y_pred = model.predict(x_test)
 
-    # Create a dataframe to compare the predicted values to the true values
+    # Creating a DataFrame to compare the predicted values vs the true values 
     comparison_df = pd.DataFrame({
-                                "Predicted values":np.round(y_pred, 2),
+                                "Predicted values": np.round(y_pred,),
                                 "True values": np.round(y_test,2),
-                                "Error":np.round(y_test - y_pred, 2)
+                                "Error": np.round(y_pred - y_test)
                                 })
-    print(f"\nPredicted values vs True values vs Error \n")
-    print(comparison_df.sample(10))
+    print("\n==================================================================")
+    print(comparison_df.sample(5))
+    print("==================================================================\n")
+    
+    ## Evaluation R-Squared, Adjusted R-Sqaured, K-Fold cross validation
 
-    # Evaluation 
-    ## R-Squared
+    # Calculate the R-Squared
     r2 = r2_score(y_test, y_pred)
 
-    ## Adjusted R-Squared
-    k = x_test.shape[1] # number of columns 
-    n = x_test.shape[0] # number of rows
-    adj_r2 = 1 - (1 - r2) * (n - k)/(n - k - 1)
+    # Calculate the Adjusted R-Squared
+    k = x_test.shape[1] # Determines the number of columns 
+    n = x_test.shape[0] # Determines the number of rows
 
-    ## K-Fold cross validation
+    adj_r2 = 1 - (1 - r2) * (n - 1)/(n - k - 1)
+
+    # Determine the K-FOLD cross validation
     avg_r2 = cross_val_score(
-                            estimator = model,
-                            X = x,
-                            y = y,
-                            scoring = "r2",
-                            cv = 10
-                            )
-    print("  ")
-    print(f"The average R-Squared (10-fold):{avg_r2.mean():.3f}")
-    print(f"The standard deviation: {avg_r2.std():.3f}")
-    
-    # Return the trained model and the model performance metrics 
+                        estimator = model,
+                        X = x,
+                        y = y, 
+                        scoring = "r2",
+                        cv = 10
+                        )
+    print(" ")
+    print(f"The average R-Sqaured (10-fold): {avg_r2.mean():.3f}")
+    print(f"Standard Devaition: {avg_r2.std():.3f}")
+
+    # Return the trained model and evaluation metrics
     return model, r2, adj_r2, avg_r2
 
-if __name__ == "__main__":
-    """ 
-    Single entry point for all the execution of the script
-        - Load the function to train the model
-        - Save the model to the full path in the model folder 
-        - Save model performance metrics as json
-        - Create a new path in the model folder to store the performance metrics 
-        - Write the model performance metrics to json file
-        - Display the output 
+if __name__=="__main__":
     """
-
-    # Load the function to train the model 
-    model, r2, adj_r2, avg_r2 = train_model(CLEAN_PATH)
-
-    # Save the model to full path created earlier on in the model folder 
-    joblib.dump(model, SAVE_MODEL)
-
-    # Save model performance metrics as json
-    metrics = {
-                "R-Squared": r2,
-                "Adjusted R-Squared": adj_r2,
-                "Average R-Squared (10-fold)": avg_r2.mean(),
-                "Standard Deviation": avg_r2.std()
-                }
+    Single point entry to act as the main execution block for this script
+        - Call the function to train the model 
+        - Save the model 
+        - write the performance metrics to json
+        - Create a path to store the performance metrics
+        - Put them into json file and store the performance metrics
+        - Display the output
+    """
+    # Call the fucntion to train the model on the clean dataset
+    model, r2, adj_r2, avg_r2 = train_model(CLEAN_DATASET)
     
-    # Create a full path in the model folder to store the performance metrics 
-    metrics_path = MODEL_PATH/"performance_metrics.json"
+    # Save the model to the new path 
+    joblib.dump(model, TRAINED_MODEL)
 
-    # Write the model performance metrics to json
-    with open(metrics_path, "w") as f:
-        json.dump(metrics, f, indent = 4)
+    # Write model performance metrics to json 
+    metrics = {
+                "R-Sqaured":r2,
+                "Adjusted R-Squared":adj_r2,
+                "Average R-Squared(10-fold)":avg_r2.mean(),
+                "Standard Devaition": avg_r2.std()
+                }
+    # Create a full path in the model folder to store the performance metrics
+    metrics_path = MODEL_FOLDER/"performance_metrics.json"
 
-    # Display the output 
-    print("\n=======================================================================================")
-    print(f"The trained model is saved at: {SAVE_MODEL}")
+    # Write the performance metrics to json 
+    with open(metrics_path, "w") as m:
+        json.dump(metrics, m, indent = 4)
+
+    # Displaying the output 
+    print("\n==================================================================")
+    print(f"The trained model is saved at: {TRAINED_MODEL}")
     print(f"The model performance metrics are saved at: {metrics_path}")
-    print("=======================================================================================\n")
-
- 
+    print("==================================================================\n")
+    
