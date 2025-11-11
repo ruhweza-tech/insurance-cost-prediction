@@ -1,6 +1,6 @@
 
 # Ignore trained models and metrics 
-model/*.pkl
+#model/*.pkl
 model/*.json
 
 # Ignore notes
