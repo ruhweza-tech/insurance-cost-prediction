@@ -82,26 +82,25 @@ def create_app(model_path:Path)-> FastAPI:
                 ]])
 
                 # Make predictions based on the user input data 
-                prediction = model.predict(user_input_data)
-                label = "Low insurance cost" if prediction <= 2000 else "High insurance cost"
+                pred = model.predict(user_input_data)
+                label = "Low insurance cost" if pred <= 2000 else "High insurance cost"
 
                 # Return the predicted output 
-                return {"The predicted insurance cost is (kr)": round(float(prediction),2),
+                return {"The predicted insurance cost is (kr)": round(float(pred),2),
                         "label": label}
         
         # Return the app
         return app
 
+# Call the fucntion to create the fastapi app
+app = create_app(MODEL_PATH)
+
 
 if __name__ == "__main__":
         """
         Single entry point acting as the main execution block 
-                - Call the function to create the app
                 - Run the fast api locally 
         """
-        # Call the fucntion to create the fastapi app
-        app = create_app(MODEL_PATH)
-
         # Use default port
         port = int(os.environ.get("PORT", 8000))
 
