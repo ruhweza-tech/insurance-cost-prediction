@@ -16,7 +16,7 @@ with open(CONFIG_PATH) as m:
 
 # Identify the path to where the raw dataset is stored and the path also to the folder that will store the clean dataset
 RAW_DATASET_PATH = BASE_DIR/config["raw_path"]
-CLEAN_DATASET = BASE_DIR/config["clean_dataset_folder"]
+CLEAN_DATASET = BASE_DIR/config["clean_folder"]
 
 # Check if the clean dataset folder exists, if missing create one automatically 
 CLEAN_DATASET.mkdir(parents = True, exist_ok = True)
