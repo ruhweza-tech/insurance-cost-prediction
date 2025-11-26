@@ -7,7 +7,7 @@ import os
 from pathlib import Path 
 
 # Define the base working directory 
-BASE_DIR = Path(__file__).resolve().parents[1]
+BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Identify the path to config and load its variables 
 CONFIG_PATH = BASE_DIR/"config"/"insurance_config.json"

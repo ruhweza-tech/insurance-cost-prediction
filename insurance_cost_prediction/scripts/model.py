@@ -12,7 +12,7 @@ from dotenv import load_dotenv
 
 # Load the .env variables and define the base working directory 
 load_dotenv()
-BASE_DIR = Path(__file__).resolve().parents[1]
+BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Identify the path to config and also load it's variables from json 
 CONFIG_PATH = BASE_DIR/"config"/"insurance_config.json"
