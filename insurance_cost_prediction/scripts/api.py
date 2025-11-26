@@ -21,7 +21,11 @@ with open(CONFIG_PATH) as m:
     config = json.load(m)
 
 # Identify the path to the trained model
-MODEL_PATH = BASE_DIR/config["model_path"]
+MODEL_PATH = (BASE_DIR/config["model_path"]).resolve()
+
+# Check if the model file exists 
+if not MODEL_PATH.exists():
+        raise FileNotFoundError(f"Model file missing at: {MODEL_PATH}")
 
 # Create the user input data structure with validation constraints 
 class PredictionInput(BaseModel):

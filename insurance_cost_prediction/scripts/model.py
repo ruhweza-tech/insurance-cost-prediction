@@ -20,14 +20,18 @@ with open(CONFIG_PATH) as m:
     config = json.load(m)
 
 # Identify the path to the processed dataset and the path to the folder that will store the trained model
-CLEAN_PATH = BASE_DIR/config["clean_path"]
-MODEL_FOLDER = BASE_DIR/config["model_folder"]
+CLEAN_PATH = (BASE_DIR/config["clean_path"]).resolve()
+MODEL_FOLDER = (BASE_DIR/config["model_folder"]).resolve()
 
 # Check if the model folder exists, if missing create one automatically 
 MODEL_FOLDER.mkdir(parents = True, exist_ok = True)
 
 # Create a full path in the model folder to store the trained model
 MODEL_PATH = MODEL_FOLDER/"model.pkl"
+
+# Check if the clean path file exists 
+if not CLEAN_PATH.exists():
+    raise FileNotFoundError(f"Processed dataset missing at: {CLEAN_PATH}")
 
 def train_model(clean_path_data: Path):
     """
